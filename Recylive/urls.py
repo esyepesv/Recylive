@@ -20,4 +20,6 @@ from pagina import views as paginaViews
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', paginaViews.home),
+    path('premios', paginaViews.premios),
+    path('residentes', paginaViews.residentes),
 ]

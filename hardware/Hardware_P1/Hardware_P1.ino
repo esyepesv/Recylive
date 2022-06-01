@@ -1,17 +1,7 @@
-  #include <UnoWiFiDevEd.h>
-
-// librerias id
 #include <SPI.h>     
-#include <MFRC522.h> 
+#include <MFRC522.h> // librerias id
 
-// librerias peso
-#include "HX711.h"   
-
-//librerias esp8266
-#include <ESP8266WiFi.h>
-#include "ThingSpeak.h"
-#include "SoftwareSerial.h"
-SoftwareSerial softSerial(0, 1); // RX, TX
+#include "HX711.h"   // librerias peso
 
 // pines id
 #define RST_PIN  9     
@@ -23,14 +13,7 @@ const int CLK=A0;
 MFRC522 mfrc522(SS_PIN, RST_PIN);
 HX711 balanza;
 
-//esp - thingspeak
-const char* ssid     = "LISSETH";
-const char* password = "3126632120";
-WiFiClient  client;
-
-unsigned long numeroCanal = 1724141;
-const char * WriteAPIKey = "BVDXM9U1ZQRP5E1K" 
-
+String str;
 
 void setup() {
   Serial.begin(9600);
@@ -38,22 +21,8 @@ void setup() {
   mfrc522.PCD_Init();
   
   balanza.begin(DOUT, CLK);
-  balanza.set_scale(-404672.89);
+  balanza.set_scale(-247823.2);
   balanza.tare(20);
-
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(ssid, password);
- 
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  //Indicamos los datos de conexión para el monitor serial
-  Serial.println("");
-  Serial.println("Conectado WiFi");
-  Serial.print("Direccion IP: ");
-  Serial.println(WiFi.localIP());
-  ThingSpeak.begin(client); 
 }
 
 void loop() {
@@ -65,36 +34,29 @@ void loop() {
     
     for (byte i = 0; i < mfrc522.uid.size; i++) { // bucle recorre de a un byte por vez el UID
       if (mfrc522.uid.uidByte[i] < 0x10){   // si el byte leido es menor a 0x10
-        id += " 0";
+        id += "0";
         }
         else{         
-        id += " ";     
+        id += "";     
         }
-      id += String(mfrc522.uid.uidByte[i], HEX);  // byte del UID leido en hexadecimal  
-    }
-        int identificacion = id.toInt();
-    Serial.println();
+      id += String(mfrc522.uid.uidByte[i], DEC);  // byte del UID leido en hexadecimal  
+    } 
+    //Serial.println();
     mfrc522.PICC_HaltA();     // detiene comunicacion con tarjeta
 
 
 
-  //peso:
+//peso:
+
   float peso = balanza.get_units(20)*1000;
-
-
-  //enviar a thingspeak
-  ThingSpeak.setField(1, identificacion);
-  ThingSpeak.setField(2, peso);
-
-  // subimos los datos a nuestro canal en ThingSpeak
-    //200 es el codigo tipico de una transmision OK en el protocolo HTTP
-    int x = ThingSpeak.writeFields(numeroCanal, WriteAPIKey);
-    if (x == 200) {
-      Serial.println("Canal actualizado.");
-    }
-    else {
-      Serial.println("Problema actualizando Canal, HTTP error code " + String(x));
-    }
+  peso = round(peso);  //se redondea el valor para no tener decimales
+  
+  //condicion peso negativo
+  if(peso<0) peso = 0;
+  
+  
+  str = id+","+String(int(peso));
+  Serial.println(str);
 
   delay(500);
 }
