@@ -8,7 +8,7 @@ import csv
 
 
 def home(request):
-    #leerDatos()
+    leerDatos()
     return render(request, 'home.html')
 
 #leer datos y actualizar bd
