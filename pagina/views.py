@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.db import models
 from pagina.models import Residente
+from pagina.models import Premios
 import csv
 
 
@@ -31,9 +32,21 @@ def pesoAPuntos(peso):
     puntos = int(peso/100)
     return puntos
 
+
+
 #vistas de premios y residentes
 def premios(request): 
-    return render(request, 'premios.html')
+    searchTerm = request.GET.get('buscarPremios')
+    if searchTerm:
+        premios = Premios.objects.filter(title__icontains=searchTerm)
+    else:
+        premios = Premios.objects.all()
+    return render(request, 'premios.html', {'searchTerm':searchTerm, 'premios':premios})
 
 def residentes(request): 
-    return render(request, 'residentes.html')
+    searchTerm = request.GET.get('buscarResidentes')
+    if searchTerm:
+        residentes = Residente.objects.filter(title__icontains=searchTerm)
+    else:
+        residentes = Residente.objects.all()
+    return render(request, 'residentes.html', {'searchTerm':searchTerm, 'residentes':residentes})
